@@ -66,7 +66,7 @@ function to(rngF, intArg) {
 function fromTo(argInt1, argInt2) {
     return to(from(argInt1), argInt2)
 }
-function element(argArr, frmtoF = fromTo(0, argArr.length)) {
+function element(argArr, frmtoF = from(0)) {
     return function () {
         return argArr[frmtoF()]
     }
@@ -86,6 +86,16 @@ function filter(frmtoF, predicate) {
         return predicate(temp) ? temp : frmtoF()
     }
 }
+// function filter(gen, pred) {
+//     return function () {
+//         while (true) {
+//             const x = gen()
+//             if (pred(x) || x === undefined) {
+//                 return x
+//             }
+//         }
+//     }
+// }
 function concat(frmtoF1, frmtoF2) {
     return function () {
         let temp = frmtoF1()
@@ -119,30 +129,37 @@ function counter(argInt) {
         }
     }
 }
-// describe("revocable", function() {
-//     it("should take a binary function, and return an object containing an invoke function that can invoke the binary function, and a revoke function that disables the invoke function", function() {
-//       const rev = revocable(add);
-//       const add_rev = rev.invoke;
-
-//       expect(add_rev(3,4)).toEqual(7);
-
-//       rev.revoke()
-
-//       expect(add_rev(3,4)).toEqual(undefined);
-//     });
-//   })
 function revocable(passf) {
     let flag = true
     return {
-        invoke() {
-            return function () {
-                if (flag) {
-                    return passf
-                }
-            }
-        },
         revoke() {
             flag = false
+        },
+        invoke: (arg1, arg2) => flag ? passf(arg1, arg2) : undefined
+    }
+}
+function m(obj, src) {
+    return {
+        "value": obj,
+        "source": src ? src.toString() : obj.toString()
+    }
+}
+function addm(obj1, obj2) {
+    return {
+        "value": obj1.value + obj2.value,
+        "source": `(${obj1.source}+${obj2.source})`
+    }
+}
+function liftm(binF, strArg) {
+    var mathChecks = {
+        '+': (x, y) => add(x, y),
+        '-': (x, y) => sub(x, y),
+        '*': (x, y) => mul(x, y),
+    }
+    return function (argM1, argM2) {
+        return {
+            "value": mathChecks[strArg](argM1.value, argM2.value),
+            "source": `(${argM1.value}${strArg}${argM2.value})`
         }
     }
 }
